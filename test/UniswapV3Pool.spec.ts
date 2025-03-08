@@ -567,7 +567,7 @@ describe('UniswapV3Pool', () => {
       await mint(other.address, minTick, maxTick, expandTo18Decimals(1))
       await swapExact0For1(expandTo18Decimals(1), wallet.address)
       await swapExact1For0(expandTo18Decimals(1), wallet.address)
-      await pool.connect(other).burn(minTick, maxTick, expandTo18Decimals(1))
+      await pool.connect(other.address).burn(minTick, maxTick, expandTo18Decimals(1))
       const {
         liquidity,
         tokensOwed0,
@@ -1076,7 +1076,7 @@ describe('UniswapV3Pool', () => {
     })
 
     it('cannot be changed by addresses that are not owner', async () => {
-      await expect(pool.connect(other).setFeeProtocol(6, 6)).to.be.reverted
+      await expect(pool.connect(other.address).setFeeProtocol(6, 6)).to.be.reverted
     })
 
     async function swapAndGetFeesOwed({
@@ -1349,8 +1349,8 @@ describe('UniswapV3Pool', () => {
   // https://github.com/Uniswap/uniswap-v3-core/issues/214
   it('tick transition cannot run twice if zero for one swap ends at fractional price just below tick', async () => {
     pool = await createPool(FeeAmount.MEDIUM, 1)
-    const sqrtTickMath = (await (await ethers.getContractFactory('TickMathTest')).deploy()) as TickMathTest
-    const swapMath = (await (await ethers.getContractFactory('SwapMathTest')).deploy()) as SwapMathTest
+    const sqrtTickMath = (await (await ethers.getContractFactory('TickMathTest')).deploy()) as unknown as TickMathTest
+    const swapMath = (await (await ethers.getContractFactory('SwapMathTest')).deploy()) as unknown as SwapMathTest
     const p0 = (await sqrtTickMath.getSqrtRatioAtTick(-24081)).add(1)
     // initialize at a price of ~0.3 token1/token0
     // meaning if you swap in 2 token0, you should end up getting 0 token1
@@ -1630,7 +1630,7 @@ describe('UniswapV3Pool', () => {
     })
 
     it('can only be called by factory owner', async () => {
-      await expect(pool.connect(other).setFeeProtocol(5, 5)).to.be.reverted
+      await expect(pool.connect(other.address).setFeeProtocol(5, 5)).to.be.reverted
     })
     it('fails if fee is lt 4 or gt 10', async () => {
       await expect(pool.setFeeProtocol(3, 3)).to.be.reverted
@@ -1686,7 +1686,7 @@ describe('UniswapV3Pool', () => {
     it('cannot reenter from swap callback', async () => {
       const reentrant = (await (
         await ethers.getContractFactory('TestUniswapV3ReentrantCallee')
-      ).deploy()) as TestUniswapV3ReentrantCallee
+      ).deploy()) as unknown as TestUniswapV3ReentrantCallee
 
       // the tests happen in solidity
       await expect(reentrant.swapToReenter(pool.address)).to.be.revertedWith('Unable to reenter')
@@ -1938,11 +1938,11 @@ describe('UniswapV3Pool', () => {
       expect(feeGrowthGlobal0X128).to.eq(MaxUint128.shl(128))
       await flash(0, 0, wallet.address, 2, 0)
       await pool.burn(minTick, maxTick, 0)
-      await pool.connect(other).burn(minTick, maxTick, 0)
+      await pool.connect(other.address).burn(minTick, maxTick, 0)
       let { amount0 } = await pool.callStatic.collect(wallet.address, minTick, maxTick, MaxUint128, MaxUint128)
       expect(amount0, 'amount0 of wallet').to.eq(0)
       ;({ amount0 } = await pool
-        .connect(other)
+        .connect(other.address)
         .callStatic.collect(other.address, minTick, maxTick, MaxUint128, MaxUint128))
       expect(amount0, 'amount0 of other').to.eq(0)
     })
@@ -1958,11 +1958,11 @@ describe('UniswapV3Pool', () => {
       expect(feeGrowthGlobal0X128).to.eq(0)
       await flash(0, 0, wallet.address, 2, 0)
       await pool.burn(minTick, maxTick, 0)
-      await pool.connect(other).burn(minTick, maxTick, 0)
+      await pool.connect(other.address).burn(minTick, maxTick, 0)
       let { amount0 } = await pool.callStatic.collect(wallet.address, minTick, maxTick, MaxUint128, MaxUint128)
       expect(amount0, 'amount0 of wallet').to.eq(1)
       ;({ amount0 } = await pool
-        .connect(other)
+        .connect(other.address)
         .callStatic.collect(other.address, minTick, maxTick, MaxUint128, MaxUint128))
       expect(amount0, 'amount0 of other').to.eq(0)
     })
@@ -1972,7 +1972,7 @@ describe('UniswapV3Pool', () => {
     let underpay: TestUniswapV3SwapPay
     beforeEach('deploy swap test', async () => {
       const underpayFactory = await ethers.getContractFactory('TestUniswapV3SwapPay')
-      underpay = (await underpayFactory.deploy()) as TestUniswapV3SwapPay
+      underpay = (await underpayFactory.deploy()) as unknown as TestUniswapV3SwapPay
       await token0.approve(underpay.address, constants.MaxUint256)
       await token1.approve(underpay.address, constants.MaxUint256)
       await pool.initialize(encodePriceSqrt(1, 1))

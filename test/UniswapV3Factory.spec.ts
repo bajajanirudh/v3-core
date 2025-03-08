@@ -22,7 +22,7 @@ describe('UniswapV3Factory', () => {
   let poolBytecode: string
   const fixture = async () => {
     const factoryFactory = await ethers.getContractFactory('UniswapV3Factory')
-    return (await factoryFactory.deploy()) as UniswapV3Factory
+    return (await factoryFactory.deploy()) as unknown as UniswapV3Factory
   }
 
   let loadFixture: ReturnType<typeof createFixtureLoader>
@@ -125,7 +125,7 @@ describe('UniswapV3Factory', () => {
 
   describe('#setOwner', () => {
     it('fails if caller is not owner', async () => {
-      await expect(factory.connect(other).setOwner(wallet.address)).to.be.reverted
+      await expect(factory.connect(other.address).setOwner(wallet.address)).to.be.reverted
     })
 
     it('updates owner', async () => {
@@ -147,7 +147,7 @@ describe('UniswapV3Factory', () => {
 
   describe('#enableFeeAmount', () => {
     it('fails if caller is not owner', async () => {
-      await expect(factory.connect(other).enableFeeAmount(100, 2)).to.be.reverted
+      await expect(factory.connect(other.address).enableFeeAmount(100, 2)).to.be.reverted
     })
     it('fails if fee is too great', async () => {
       await expect(factory.enableFeeAmount(1000000, 10)).to.be.reverted
